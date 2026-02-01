@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:6.0
+          ports:
+            - containerPort: 6379
+          # 👇 关键修改 1：告诉容器，把 /data 目录映射到外部存储
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+      # 👇 关键修改 2：定义这个外部存储来自哪里
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc  # 我们一会要创建这个 PVC 申请单

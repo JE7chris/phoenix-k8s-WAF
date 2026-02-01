@@ -1,0 +1,21 @@
+# 1. 回到根目录
+cd /home/phoenixprj/phoenix-k8s
+
+# 2. 创建忽略规则
+cat > .gitignore <<EOF
+# Python 垃圾文件
+__pycache__/
+*.pyc
+
+# 虚拟环境 (如果有)
+venv/
+env/
+
+# IDE 配置
+.vscode/
+.idea/
+
+# 敏感信息 (虽然我们是Demo，但在真实环境必须忽略这些)
+.env
+*.log
+EOF

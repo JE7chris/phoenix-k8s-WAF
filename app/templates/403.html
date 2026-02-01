@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ACCESS DENIED</title>
+    <style>
+        body { background-color: #000; color: #ff3333; font-family: "Courier New", Courier, monospace; text-align: center; padding-top: 100px; }
+        .box { border: 2px solid #ff3333; display: inline-block; padding: 40px; box-shadow: 0 0 20px #ff3333; }
+        h1 { font-size: 50px; margin: 0; }
+        p { font-size: 20px; }
+        .details { color: #fff; margin-top: 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🚫 ACCESS DENIED</h1>
+        <hr color="#ff3333">
+        <p>Your IP address has been blocked by Phoenix WAF.</p>
+        <p>Malicious activity was detected.</p>
+        <div class="details">
+            Block ID: <span id="ip"></span><br>
+            Duration: 60 Seconds
+        </div>
+    </div>
+    <script>
+        // 简单的倒计时刷新
+        setTimeout(function(){ location.reload(); }, 60000);
+    </script>
+</body>
+</html>

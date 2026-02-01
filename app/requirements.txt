@@ -1,0 +1,6 @@
+flask
+redis
+requests
+scapy
+prometheus-flask-exporter
+pymysql

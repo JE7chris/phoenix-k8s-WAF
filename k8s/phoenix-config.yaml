@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phoenix-config
+data:
+  REDIS_HOST: "redis"       # 这是原本写死在 Deployment 里的
+  LOG_LEVEL: "INFO"         # 我们顺便加个新配置

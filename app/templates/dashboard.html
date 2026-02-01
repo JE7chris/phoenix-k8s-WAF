@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Phoenix Security Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #050505; --panel: #111; --border: #333; --cyan: #00f3ff; --red: #ff2a2a; --yellow: #ffc600; --green: #00ff41; }
+        body { background: var(--bg); color: #ccc; font-family: 'Rajdhani', sans-serif; margin: 0; padding: 20px; }
+        
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { margin: 0; color: #fff; letter-spacing: 2px; text-transform: uppercase; }
+        .status-box { display: flex; gap: 20px; font-size: 1.2rem; font-weight: bold; }
+        
+        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; height: calc(100vh - 100px); }
+        .panel { background: var(--panel); border: 1px solid var(--border); padding: 15px; overflow: hidden; display: flex; flex-direction: column; }
+        .panel-title { color: var(--cyan); margin-bottom: 10px; font-size: 1.1rem; border-left: 3px solid var(--cyan); padding-left: 10px; }
+
+        /* 左侧控制台 */
+        .input-group { margin-bottom: 20px; }
+        input { background: #000; border: 1px solid #444; color: #fff; padding: 10px; width: 100%; box-sizing: border-box; font-family: inherit; margin-bottom: 5px; }
+        button { width: 100%; padding: 10px; font-weight: bold; cursor: pointer; border: none; font-family: inherit; text-transform: uppercase; }
+        .btn-block { background: var(--red); color: #fff; }
+        .btn-block:hover { background: #cc0000; }
+        
+        /* 封禁列表 */
+        .ip-list { flex-grow: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; border-top: 1px solid #333; }
+        .ip-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #222; animation: fadeIn 0.5s; }
+        .ip-item span { color: var(--red); font-weight: bold; }
+        .btn-unlock { background: var(--green); color: #000; padding: 2px 8px; font-size: 0.8rem; }
+
+        /* 日志表格 - 核心修改 */
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th { text-align: left; color: #666; padding: 10px; border-bottom: 1px solid #333; }
+        td { padding: 8px 10px; border-bottom: 1px solid #222; color: #aaa; }
+        
+        /* 🔥 攻击类型徽章 🔥 */
+        .badge { padding: 3px 8px; border-radius: 4px; color: #000; font-weight: bold; font-size: 0.85rem; display: inline-block; width: 100px; text-align: center; }
+        .b-SQL { background: var(--red); color: #fff; box-shadow: 0 0 10px var(--red); }
+        .b-XSS { background: var(--yellow); color: #000; box-shadow: 0 0 10px var(--yellow); }
+        .b-CMD { background: #ff00ff; color: #fff; }
+        .b-Normal { background: #222; color: #555; border: 1px solid #444; }
+
+        /* 警报动画 */
+        @keyframes flash { 0% { border-color: var(--border); } 50% { border-color: var(--red); } 100% { border-color: var(--border); } }
+        .under-attack { animation: flash 1s infinite; border: 1px solid var(--red) !important; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Phoenix <span style="color:var(--cyan)">WAF</span> Console</h1>
+        <div class="status-box">
+            <span style="color: var(--red)">BLOCKED: <span id="val-blocked">0</span></span>
+            <span style="color: var(--green)">SYSTEM: ONLINE</span>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="panel">
+            <div class="panel-title">⛔ THREAT RESPONSE</div>
+            <div class="input-group">
+                <input type="text" id="manual-ip" placeholder="Target IP...">
+                <button class="btn-block" onclick="manualBlock()">MANUAL BLOCK</button>
+            </div>
+            <div style="margin-bottom: 5px; color: #666;">ACTIVE BANS:</div>
+            <ul class="ip-list" id="blocked-list"></ul>
+        </div>
+
+        <div class="panel" id="log-panel">
+            <div class="panel-title">📡 LIVE ATTACK FEED</div>
+            <div style="flex-grow: 1; overflow-y: auto;">
+                <table id="log-table">
+                    <thead>
+                        <tr>
+                            <th width="100">TIME</th>
+                            <th width="140">SOURCE IP</th>
+                            <th width="120">THREAT TYPE</th>
+                            <th>DETAILS / PORT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function refreshData() {
+            // 1. 获取封禁列表
+            fetch('/api/blocked_ips').then(r => r.json()).then(ips => {
+                document.getElementById('val-blocked').innerText = ips.length;
+                const list = document.getElementById('blocked-list');
+                list.innerHTML = "";
+                ips.forEach(i => {
+                    list.innerHTML += `
+                        <li class="ip-item">
+                            <span>${i.ip}</span>
+                            <button class="btn-unlock" onclick="unlock('${i.ip}')">UNLOCK</button>
+                        </li>`;
+                });
+            });
+
+            // 2. 获取日志
+            fetch('/api/stats').then(r => r.json()).then(data => {
+                const tbody = document.getElementById('log-tbody');
+                tbody.innerHTML = "";
+                let hasAttack = false;
+
+                data.logs.forEach(log => {
+                    // 根据类型判断样式
+                    let badgeClass = 'b-Normal';
+                    if (log.type.includes("SQL")) { badgeClass = 'b-SQL'; hasAttack = true; }
+                    else if (log.type.includes("XSS")) { badgeClass = 'b-XSS'; hasAttack = true; }
+                    else if (log.type.includes("Command") || log.type.includes("Inj")) { badgeClass = 'b-CMD'; hasAttack = true; }
+
+                    let time = log.time.split(' ')[1] || log.time; // 只显示时间部分
+                    
+                    const row = `
+                        <tr>
+                            <td style="color:#666">${time}</td>
+                            <td style="font-family:monospace; color:#fff">${log.ip}</td>
+                            <td><span class="badge ${badgeClass}">${log.type}</span></td>
+                            <td style="font-size:0.85rem">${log.port} (TCP)</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+                // 如果有攻击，让面板边框闪烁
+                const panel = document.getElementById('log-panel');
+                if (hasAttack) panel.classList.add('under-attack');
+                else panel.classList.remove('under-attack');
+            });
+        }
+
+        // 按钮功能
+        function manualBlock() {
+            const ip = document.getElementById('manual-ip').value;
+            if(!ip) return;
+            fetch('/api/block_ip', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ip}) })
+            .then(() => { document.getElementById('manual-ip').value = ""; refreshData(); });
+        }
+        function unlock(ip) {
+            fetch('/api/unblock_ip', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ip}) })
+            .then(() => refreshData());
+        }
+
+        setInterval(refreshData, 1000); // 1秒刷新一次，更实时
+        refreshData();
+    </script>
+</body>
+</html>

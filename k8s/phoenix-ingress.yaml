@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: phoenix-ingress
+spec:
+  rules:
+    - host: phoenix.local      # 🎯 目标域名
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: phoenix-service  # 转发给哪个 Service?
+                port:
+                  number: 80           # Service 的端口 (注意是 80，不是 NodePort 的 30007)

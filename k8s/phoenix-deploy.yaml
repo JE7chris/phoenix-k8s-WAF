@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phoenix-deploy
+  labels:
+    app: phoenix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phoenix
+  template:
+    metadata:
+      labels:
+        app: phoenix
+    spec:
+      containers:
+      - name: phoenix-container
+        # 🔥 关键点1：必须用刚才构建修复好的 v4.5 镜像
+        image: je7chris/phoenix-app:v4.5
+        # 🔥 关键点2：使用本地镜像，不去 DockerHub 拉取
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        # 🔥 关键点3：特权模式！Sniffer 抓包必须要有网卡权限
+        securityContext:
+          privileged: true
+          capabilities:
+            add: ["NET_ADMIN", "NET_RAW"]
+        env:
+        # 指向你的 Redis Service (如果你的 Service 名字是 redis-service)
+        - name: REDIS_HOST
+          value: "redis" 
