@@ -88,9 +88,45 @@ graph TD
 ├── deploy.sh                     # 项目自动化部署脚本
 ├── vm_attacker.py                # 外部攻击模拟脚本 (用于演示防御效果)
 └── README.md                     # 项目说明文档
-🛠️ 技术栈 (Tech Stack)类别技术用途容器编排Kubernetes (Minikube)服务部署、Service 发现、ConfigMap 配置管理容器化Docker镜像构建、多阶段构建进程管理Supervisord容器内多进程管理 (Web + Sniffer)开发语言Python 3.9Flask Web 应用、流量嗅探脚本网络技术Scapy / TCPDump网络包捕获与协议分析中间件Redis消息队列、黑名单缓存数据库MySQL攻击日志持久化存储监控告警Prometheus业务指标采集 (Exporter)数据可视化Grafana系统健康度仪表盘🚀 快速开始 (Quick Start)前置要求Kubernetes 集群 (推荐 Minikube)Docker 环境kubectl 命令行工具安装步骤克隆仓库Bashgit clone git@github.com:JE7chris/phoenix-k8s-WAF.git
+🛠️ 技术栈 (Tech Stack)
+领域,核心技术,应用场景
+云原生编排,Kubernetes (Minikube),Pod 管理、Service 发现、ConfigMap/Secret
+容器化,Docker,多阶段镜像构建、环境隔离
+开发语言,Python 3.9 (Flask),Web 业务逻辑、WAF 规则引擎、攻击模拟
+网络底层,Scapy / Libpcap,旁路流量嗅探、TCP/IP 协议包分析
+进程管理,Supervisord,容器内多进程守护 (Web + Sniffer)
+中间件,Redis,异步消息队列、黑名单高速缓存
+可观测性,Prometheus + Grafana,业务 QPS 监控、延迟报警、系统大屏
+
+🚀 快速开始 (Quick Start)
+前置要求
+Kubernetes 集群 (推荐 Minikube)
+
+Docker 环境
+
+kubectl 命令行工具
+
+安装步骤
+克隆仓库
+
+Bash
+git clone git@github.com:JE7chris/phoenix-k8s-WAF.git
 cd phoenix-k8s-WAF
-一键部署可以使用提供的脚本快速部署所有服务：Bashchmod +x deploy.sh
+一键部署 可以使用提供的脚本快速部署所有服务：
+
+Bash
+chmod +x deploy.sh
 ./deploy.sh
 # 或者手动执行: kubectl apply -f k8s/
-访问控制台WAF 监控大屏： http://<minikube-ip>:30007/dashboardGrafana 面板： http://<minikube-ip>:30300 (默认账号: admin/admin)Prometheus： http://<minikube-ip>:30090攻击测试运行项目自带的攻击脚本，模拟 SQL 注入和 XSS 攻击流量：Bashpython3 vm_attacker.py
+访问控制台
+
+WAF 监控大屏： http://<minikube-ip>:30007/dashboard
+
+Grafana 面板： http://<minikube-ip>:30300 (默认账号: admin/admin)
+
+Prometheus： http://<minikube-ip>:30090
+
+攻击测试 运行项目自带的攻击脚本，模拟 SQL 注入和 XSS 攻击流量：
+
+Bash
+python3 vm_attacker.py
