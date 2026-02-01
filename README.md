@@ -62,3 +62,17 @@ graph TD
         Prometheus -->|"Scrape Metrics"| WebApp
         Grafana -->|"Visualize"| Prometheus
     end
+
+
+## 技术栈
+领域,关键技术,详细说明
+云原生编排,Kubernetes (Minikube),使用 Deployment 管理无状态应用，ConfigMap/Secret 管理配置
+容器化,Docker,编写 Dockerfile，使用 Multi-stage 构建镜像
+进程管理,Supervisord,容器内多进程守护，确保 Web 和 Sniffer 同时存活
+开发语言,Python 3.9,"Flask (Web服务), Scapy (流量分析), Redis-py (数据交互)"
+网络底层,TCP/IP & Libpcap,基于 Linux 底层抓包技术，实现非侵入式流量审计
+中间件,Redis,作为 List 消息队列缓冲流量日志，作为 Set 存储黑名单 IP
+持久化,MySQL 5.7,存储历史攻击日志，用于后续的安全审计和报表
+监控告警,Prometheus,使用 prometheus-flask-exporter 埋点采集 QPS 和延迟
+可视化,Grafana,定制 dashboard (ID: 17629)，展示系统负载和业务健康度
+前端大屏,ECharts + HTML5,自研安全态势感知大屏，实时刷新攻击数据
