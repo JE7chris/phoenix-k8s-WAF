@@ -17,6 +17,20 @@
 
 ---
 
+## 🛠️ 技术栈 (Tech Stack)
+
+| 领域 | 关键技术 | 详细说明与用途 |
+| :--- | :--- | :--- |
+| **云原生编排** | **Kubernetes (Minikube)** | 使用 Deployment 管理无状态应用，Service 暴露服务，ConfigMap/Secret 管理环境配置。 |
+| **容器化** | **Docker** | 编写 Dockerfile，使用 Multi-stage 构建镜像，优化镜像体积。 |
+| **进程管理** | **Supervisord** | **关键组件**：在单个 Docker 容器内同时守护 Flask 和 Sniffer 进程，实现 Sidecar 紧耦合模式。 |
+| **开发语言** | **Python 3.9** | **Flask**: Web 服务与 Metrics 暴露；<br>**Scapy**: 底层网络包捕获与协议分析；<br>**Redis-py**: 异步数据交互。 |
+| **网络底层** | **TCP/IP & Libpcap** | 基于 Linux 底层抓包技术，实现非侵入式流量审计，不影响业务响应速度。 |
+| **中间件** | **Redis** | **List**: 作为高吞吐消息队列缓冲流量日志；<br>**Set**: 存储黑名单 IP，支持 O(1) 复杂度快速查询。 |
+| **持久化** | **MySQL 5.7** | 存储历史攻击日志，用于后续的安全审计和报表分析。 |
+| **监控告警** | **Prometheus** | 使用 `prometheus-flask-exporter` 埋点采集 QPS、响应延迟和 HTTP 状态码。 |
+| **可视化** | **Grafana** | 定制 Dashboard (ID: 17629)，实时展示系统负载、业务健康度及资源使用率。 |
+
 ## 🏗️ 核心架构 (Core Architecture)
 
 系统采用微服务架构设计，主要包含以下核心组件：
